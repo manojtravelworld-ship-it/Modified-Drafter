@@ -1,0 +1,352 @@
+Fetching https://raw.githubusercontent.com/manojbillionaire/New-Drafter/main/src/components/AdvocatePortal.tsx
+Extracted lines 3396 to 3745:
+
+            {view === 'drafting' && (
+              <motion.div key="drafting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col overflow-hidden">
+                {/* Mobile Slider Header-Tabs Navigation */}
+                <div className="flex md:hidden bg-[#090e18] border-b border-white/10 p-2.5 justify-around items-center shrink-0 z-30 select-none">
+                  <button 
+                    onClick={() => scrollToPanel(0)}
+                    className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all ${
+                      activePanel === 0 
+                        ? 'bg-indigo-600 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)] scale-[1.05]' 
+                        : 'text-slate-400 hover:text-white bg-white/5'
+                    }`}
+                  >
+                    1. Case Inputs
+                  </button>
+                  <div className="text-slate-800 text-[10px] font-bold">•</div>
+                  <button 
+                    onClick={() => scrollToPanel(1)}
+                    className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all ${
+                      activePanel === 1 
+                        ? 'bg-indigo-600 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)] scale-[1.05]' 
+                        : 'text-slate-400 hover:text-white bg-white/5'
+                    }`}
+                  >
+                    2. Draft Pad
+                  </button>
+                  <div className="text-slate-800 text-[10px] font-bold">•</div>
+                  <button 
+                    onClick={() => scrollToPanel(2)}
+                    className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all ${
+                      activePanel === 2 
+                        ? 'bg-indigo-600 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)] scale-[1.05]' 
+                        : 'text-slate-400 hover:text-white bg-white/5'
+                    }`}
+                  >
+                    3. AI Advice
+                  </button>
+                </div>
+
+                {/* Sliding panels wrapper */}
+                <div 
+                  ref={draftingContainerRef}
+                  onScroll={handleDraftingScroll}
+                  className="flex-1 flex flex-row overflow-x-auto md:overflow-hidden snap-x snap-mandatory scroll-smooth custom-scrollbar"
+                >
+                  {/* Left Panel: Inputs */}
+                  <div className="w-[calc(100vw-72px)] md:w-80 flex-shrink-0 snap-center flex flex-col border-r border-white/5 bg-[#070b14]">
+                  <div className="p-6 border-b border-white/5">
+                    <div className="text-[10px] font-black text-indigo-500 tracking-widest uppercase">CASE INPUTS</div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Fact of the Case</label>
+                        <button onClick={() => setEnlargedElement('facts')} className="p-1 text-slate-500 hover:text-indigo-400 transition-colors" title="Enlarge">
+                          <Maximize2 size={12} />
+                        </button>
+                      </div>
+                      <textarea 
+                        value={draftFacts} 
+                        onChange={e => setDraftFacts(e.target.value)}
+                        placeholder="Enter the facts of the case here..."
+                        className="w-full h-48 bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-300 focus:border-indigo-500 transition-colors resize-none custom-scrollbar"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Model Draft / Template</label>
+                        <button onClick={() => setEnlargedElement('model')} className="p-1 text-slate-500 hover:text-indigo-400 transition-colors" title="Enlarge">
+                          <Maximize2 size={12} />
+                        </button>
+                      </div>
+                      <textarea 
+                        value={draftModel} 
+                        onChange={e => setDraftModel(e.target.value)}
+                        placeholder="Upload or paste a model draft..."
+                        className="w-full h-48 bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-300 focus:border-indigo-500 transition-colors resize-none custom-scrollbar"
+                      />
+                    </div>
+                    <button 
+                      onClick={handleAIDrafting}
+                      disabled={isDrafting || !draftFacts.trim()}
+                      className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl font-black text-[10px] text-white uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                    >
+                      {isDrafting ? <RotateCcw size={14} className="animate-spin" /> : <Zap size={14} />}
+                      {isDrafting ? "GENERATING..." : "GENERATE DRAFT"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Middle Panel: Writing Pad */}
+                <div className="w-[calc(100vw-72px)] md:w-auto md:flex-1 flex-shrink-0 snap-center flex flex-col border-r border-white/5 bg-slate-950/10">
+                  <div className="h-12 bg-white/5 border-b border-white/5 flex items-center justify-between px-6">
+                    <div className="flex items-center gap-3">
+                      <div className="text-[10px] font-black text-indigo-400 tracking-widest uppercase mr-4">TEMPORARY WRITING PAD</div>
+                      
+                      {/* Mode Toggle Tabs */}
+                      <div className="flex bg-[#070b14] p-0.5 rounded-lg border border-white/5">
+                        <button
+                          onClick={() => setDraftEditorMode('interactive')}
+                          className={`px-2.5 py-1 text-[9px] font-black uppercase rounded-md tracking-wider transition-all ${
+                            draftEditorMode === 'interactive'
+                              ? 'bg-indigo-600 text-white'
+                              : 'text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          Quick-Link View
+                        </button>
+                        <button
+                          onClick={() => setDraftEditorMode('edit')}
+                          className={`px-2.5 py-1 text-[9px] font-black uppercase rounded-md tracking-wider transition-all ${
+                            draftEditorMode === 'edit'
+                              ? 'bg-indigo-600 text-white'
+                              : 'text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          Edit Document
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setEnlargedElement('pad')} className="p-1.5 text-slate-500 hover:text-indigo-400 transition-colors" title="Enlarge"><Maximize2 size={16} /></button>
+                      <button onClick={() => handleCopy(draftPages[0])} className="p-1.5 text-slate-500 hover:text-white transition-colors" title="Copy"><Copy size={16} /></button>
+                      <button onClick={() => handleDownloadDraft(draftPages[0])} className="p-1.5 text-slate-500 hover:text-white transition-colors" title="Download"><Download size={16} /></button>
+                    </div>
+                  </div>
+
+                  {/* Case Citations Dropdown / Panel */}
+                  {(isSearchingCitations || draftCitations.length > 0 || citationSearchError) && (
+                    <div className="bg-[#090e18] border-b border-white/10">
+                      {/* Accordion Trigger/Header */}
+                      <button 
+                        onClick={() => setShowCitationsDropdown(!showCitationsDropdown)}
+                        className="w-full px-6 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <BookOpen size={14} className="text-amber-500" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+                            Court Precedents & Citations
+                          </span>
+                          {isSearchingCitations && (
+                            <span className="text-[9px] text-indigo-400 font-bold ml-2 animate-pulse flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
+                              Scanning Cases...
+                            </span>
+                          )}
+                          {!isSearchingCitations && draftCitations.length > 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[9px] font-black">
+                              {draftCitations.length} Precedent{draftCitations.length > 1 ? 's' : ''} Found
+                            </span>
+                          )}
+                          {!isSearchingCitations && draftCitations.length === 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-red-400/10 border border-red-500/20 text-red-400 text-[9px] font-black">
+                              No Precedents Found
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-black text-slate-500 uppercase">
+                            {showCitationsDropdown ? 'COLLAPSE' : 'EXPAND'}
+                          </span>
+                          <ChevronRight 
+                            size={16} 
+                            className={`text-slate-400 transform transition-transform duration-200 ${showCitationsDropdown ? 'rotate-90' : ''}`} 
+                          />
+                        </div>
+                      </button>
+
+                      {/* Accordion Content */}
+                      <AnimatePresence>
+                        {showCitationsDropdown && (
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden border-t border-white/5 bg-black/40"
+                          >
+                            <div className="p-5 space-y-4">
+                              {/* Error State */}
+                              {citationSearchError && (
+                                <div className="p-3 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs flex items-center gap-2">
+                                  <AlertTriangle size={14} />
+                                  <span>{citationSearchError}</span>
+                                </div>
+                              )}
+
+                              {/* Loading State */}
+                              {isSearchingCitations && (
+                                <div className="py-6 flex flex-col items-center justify-center gap-2 text-slate-400">
+                                  <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                                  <span className="text-[10px] font-bold tracking-wider text-slate-400">ANALYZING LEGAL ARCHIVES & RETRIEVING CITATIONS...</span>
+                                </div>
+                              )}
+
+                              {/* No citation state */}
+                              {!isSearchingCitations && draftCitations.length === 0 && !citationSearchError && (
+                                <div className="py-6 flex flex-col items-center justify-center gap-1.5 text-center">
+                                  <AlertCircle size={20} className="text-amber-500/80 animate-bounce" />
+                                  <span className="text-xs font-semibold text-amber-500/90">No case is found now.</span>
+                                  <p className="text-[10px] text-slate-500 max-w-md">Our neural legal indexes returned no favorable match for these exact case facts at this moment.</p>
+                                </div>
+                              )}
+
+                              {/* Citation results */}
+                              {!isSearchingCitations && draftCitations.length > 0 && (
+                                <>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {draftCitations.map((cit) => (
+                                      <div 
+                                        id={`citation-card-${cit.id}`}
+                                        key={cit.id}
+                                        onClick={() => toggleCitationSelected(cit.id)}
+                                        className={`p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col justify-between ${
+                                          cit.id === highlightedCitationId
+                                            ? 'bg-amber-500/15 border-amber-400 ring-2 ring-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.5)] scale-[1.02]'
+                                            : cit.selected 
+                                              ? 'bg-indigo-500/5 border-indigo-500 shadow-md ring-1 ring-indigo-500/50' 
+                                              : 'bg-white/[0.02] border-white/10 hover:border-white/20 hover:bg-white/[0.04]'
+                                        }`}
+                                      >
+                                        <div>
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                                              cit.court === 'Supreme Court' 
+                                                ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' 
+                                                : 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400'
+                                            }`}>
+                                              {cit.court}
+                                            </span>
+                                            
+                                            {/* Tick/Checkbox button */}
+                                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                                              cit.selected 
+                                                ? 'bg-indigo-600 border-indigo-500 text-white' 
+                                                : 'border-white/20 text-transparent hover:border-white/40'
+                                            }`}>
+                                              <Check size={10} strokeWidth={3} />
+                                            </div>
+                                          </div>
+                                          <h4 className="text-xs font-black text-slate-200 leading-snug mb-2 font-serif">
+                                            {cit.title}
+                                          </h4>
+                                          <p className="text-[10px] text-slate-400 leading-relaxed font-sans line-clamp-5">
+                                            {cit.paragraph}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Action Buttons */}
+                                  <div className="pt-2 flex flex-col sm:flex-row justify-between items-center gap-3 border-t border-white/5">
+                                    <div className="text-[9px] text-slate-500 font-bold">
+                                      Select citations and click run to incorporate precedents and rewrite draft.
+                                    </div>
+                                    <button
+                                      onClick={handleRewriteWithCitations}
+                                      disabled={isRewritingDraft || draftCitations.filter(c => c.selected).length === 0}
+                                      className="py-2.5 px-5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 rounded-xl font-black text-[10px] text-white uppercase tracking-widest transition-all flex items-center gap-2"
+                                    >
+                                      {isRewritingDraft ? (
+                                        <RotateCcw size={12} className="animate-spin" />
+                                      ) : (
+                                        <Zap size={12} className="text-yellow-400 fill-yellow-400" />
+                                      )}
+                                      {isRewritingDraft ? "REWRITING LAWSUIT..." : "ADD SELECTED CITATIONS & REWRITE"}
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
+                  <div className="flex-1 p-10 bg-black/20 overflow-y-auto custom-scrollbar">
+                    {draftEditorMode === 'interactive' ? (
+                      <div className="max-w-2xl mx-auto bg-white/5 p-12 rounded-lg shadow-2xl min-h-full font-serif text-slate-300 leading-relaxed outline-none">
+                        {renderDraftWithQuickLinks(draftPages[0])}
+                      </div>
+                    ) : (
+                      <div className="max-w-2xl mx-auto bg-white/5 p-12 rounded-lg shadow-2xl min-h-full font-serif text-slate-300 leading-relaxed whitespace-pre-wrap outline-none" contentEditable suppressContentEditableWarning onBlur={(e) => setDraftPages([e.currentTarget.innerText])}>
+                        {draftPages[0]}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Panel: Suggestions & Chat */}
+                <div className="w-[calc(100vw-72px)] md:w-80 flex-shrink-0 snap-center flex flex-col bg-[#070b14] border-l border-white/5">
+                  <div className="h-12 bg-white/5 border-b border-white/5 flex items-center justify-between px-6 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <div className="text-[10px] font-black text-emerald-500 tracking-widest uppercase">AI SUGGESTIONS</div>
+                      <button 
+                        onClick={() => setShowCustomPromptPage(true)}
+                        className="px-2 py-0.5 bg-indigo-600/20 hover:bg-indigo-600 border border-[#818cf8]/10 text-indigo-400 hover:text-white rounded-md text-[8px] font-black tracking-wider transition-all uppercase cursor-pointer block"
+                        title="Configure custom drafting & suggestion instruction prompts"
+                      >
+                        PROMPT
+                      </button>
+                    </div>
+                    <div className="flex gap-1">
+                      <button onClick={() => setEnlargedElement('suggestions')} className="p-1 text-slate-500 hover:text-emerald-400 transition-colors" title="Enlarge"><Maximize2 size={14} /></button>
+                      <button onClick={() => handleCopy(draftSuggestions)} className="p-1 text-slate-500 hover:text-white transition-colors" title="Copy" disabled={!draftSuggestions}><Copy size={14} /></button>
+                      <button onClick={handleDownloadSuggestions} className="p-1 text-slate-500 hover:text-white transition-colors" title="Download" disabled={!draftSuggestions}><Download size={14} /></button>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                    {draftSuggestions && (
+                      <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4">
+                        <div className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                          <Info size={12} /> Improvement Points
+                        </div>
+                        <div className="text-[11px] text-slate-300 leading-relaxed markdown-body">
+                          <ReactMarkdown>{draftSuggestions}</ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-4">
+                      <div className="text-[10px] font-black text-slate-500 tracking-widest uppercase">CHAT ASSISTANT</div>
+                      {deskChatHistory.map((msg, i) => (
+                        <div key={i} className={`p-4 rounded-2xl text-xs leading-relaxed markdown-body ${msg.role === 'ai' ? 'bg-white/5 border border-white/10' : 'bg-indigo-600/20 border border-indigo-600/30'}`}>
+                          <ReactMarkdown>{msg.text}</ReactMarkdown>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-6 border-t border-white/5">
+                    <div className="flex gap-2">
+                      <input value={deskInput} onChange={e => setDeskInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendDeskChat()} placeholder="Refine draft..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs" />
+                      <button onClick={sendDeskChat} className="bg-indigo-600 p-2 rounded-xl"><Send size={14} /></button>
+                    </div>
+                  </div>
+                </div>
+                </div> {/* End sliding panels wrapper */}
+              </motion.div>
+            )}
+
+            {view === 'notif' && (
+              <motion.div key="notif" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full p-6 overflow-y-auto space-y-6">
+                <h2 className="text-3xl font-black italic text-slate-200">Notifications</h2>
+                <div className="space-y-4">
+                  {[
+                    { title: 'System Update', message: 'Nexus Justice v3.1 is now live with hybrid AI capabilities.', time: '2 hours ago', type: 'info' },
+                    { title: 'New Case Assigned', message: 'You have a new case request from Elena Rodriguez.', time: '5 hours ago', type: 'case' },
+                    { title: 'Subscription Renewal', message: 'Your Elite plan expires in 15 days.', time: '1 day ago', type: 'warning' },
+                  ].map((n, i) => (

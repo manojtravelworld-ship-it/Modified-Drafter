@@ -1,0 +1,303 @@
+Fetching https://raw.githubusercontent.com/manojbillionaire/New-Drafter/main/src/components/AdvocatePortal.tsx
+Extracted lines 2300 to 2600:
+  };
+
+  const handleAIDrafting = async () => {
+    if (!draftFacts.trim() || isDrafting) return;
+    setIsDrafting(true);
+    setDraftCitations([]);
+    setShowCitationsDropdown(false);
+    setCitationSearchError('');
+    try {
+      const prompt = `Based on the following facts of the case:
+${draftFacts}
+
+${draftModel ? `And using this model/template as a guide:
+${draftModel}` : ''}
+
+Please draft a formal legal document suitable for submission before a court. 
+Maintain a professional legal tone, use appropriate legal terminology, and follow standard court formatting.`;
+
+      const response = await aiEngine.generateResponse(prompt, [], undefined, 'drafting');
+      setDraftPages([response.text]);
+
+      // Get suggestions
+      const suggestionPrompt = `Review the following legal draft and provide 3-5 specific suggestions for improvement or additional points to consider. Provide the suggestions as a bulleted list. Draft to review:
+${response.text}`;
+      const suggestions = await aiEngine.generateResponse(suggestionPrompt, [], undefined, 'drafting');
+      setDraftSuggestions(suggestions.text);
+
+      // Search for Case Citations (Supreme Court / High Court)
+      setIsSearchingCitations(true);
+      try {
+        const citationPrompt = `You are an expert legal researcher specializing in Indian Supreme Court and High Court judgments.
+Based on the following facts of the case:
+"${draftFacts}"
+
+Please analyze the case facts and find 3 highly relevant and favorable, real or highly probable Supreme Court or High Court case citations that support our client's legal position in this exact context.
+If absolutely no relevant precedents or cases can be found for these facts, respond with exactly:
+NO_CASES_FOUND
+
+Otherwise, respond ONLY with the relevant cases in the following exact format (do not include any conversational intro/outro, only the structured blocks):
+
+[CASE]
+Title: [Provide the exact Case Citation, e.g., Satish Chandra Verma v. Union of India (2019) SCC Online SC or state high court equivalents]
+Court: [Supreme Court or High Court]
+Paragraph: [Write a highly detailed, professional paragraph explaining the legal principle, relevant paragraph excerpt, and why this case is favorable to our current client's context.]
+[END_CASE]
+
+Remember, if you find nothing, output exactly "NO_CASES_FOUND". Do not add markdown styling around the blocks.`;
+
+        const citationsResponse = await aiEngine.generateResponse(citationPrompt, [], undefined, 'drafting');
+        const parsed = parseCitations(citationsResponse.text);
+        setDraftCitations(parsed);
+        setShowCitationsDropdown(true); // Automatically reveal the dropdown once a draft is generated!
+      } catch (citErr) {
+        console.error("Citations fetch failed:", citErr);
+        setCitationSearchError('Failed to search case citations.');
+      } finally {
+        setIsSearchingCitations(false);
+      }
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDrafting(false);
+    }
+  };
+
+  const toggleCitationSelected = (id: string) => {
+    setDraftCitations(prev => prev.map(c => c.id === id ? { ...c, selected: !c.selected } : c));
+  };
+
+  const handleRewriteWithCitations = async () => {
+    const selectedCitations = draftCitations.filter(c => c.selected);
+    if (selectedCitations.length === 0) return;
+    setIsRewritingDraft(true);
+    try {
+      const selectedCitationsList = selectedCitations
+        .map(c => `- ${c.title} (${c.court}): ${c.paragraph}`)
+        .join("\n\n");
+
+      const rewritePrompt = `You are an elite Senior Legal Draftsman.
+We are drafting a court complaint / petition based on these facts:
+"${draftFacts}"
+
+We have already prepared an initial draft:
+"${draftPages[0]}"
+
+The user has selected the following favorable case citations which MUST be fully integrated into the petition to support our client's position:
+${selectedCitationsList}
+
+Please rewrite the entire court complaint / petition to:
+1. Seamlessly integrate and argue these accepted precedents at their logically correct positions in the petition (such as in legal grounds, pleadings, or arguments section).
+2. Clearly cite the case name, court, and details, framing them beautifully.
+3. Keep the formal format, structured structure, and high legal quality of the document intact.
+4. Do not output checklists or notes or bullet summaries; return the complete, polished, court-ready rewritten text.`;
+
+      const response = await aiEngine.generateResponse(rewritePrompt, [], undefined, 'drafting');
+      setDraftPages([response.text]);
+      
+      // Update suggestions for the rewritten draft
+      const suggestionPrompt = `Review the following rewritten legal draft and provide 3-5 specific suggestions for further improvement. Provide the suggestions as a bulleted list. Draft:
+${response.text}`;
+      const suggestions = await aiEngine.generateResponse(suggestionPrompt, [], undefined, 'drafting');
+      setDraftSuggestions(suggestions.text);
+    } catch (err: any) {
+      console.error("Failed to rewrite draft with citations:", err);
+    } finally {
+      setIsRewritingDraft(false);
+    }
+  };
+
+  const handleDownloadDraft = (text: string) => {
+    const blob = new Blob([text], { type: 'text/plain' });
+    saveAs(blob, `Nexus_Draft_${new Date().getTime()}.txt`);
+  };
+
+  const handleDownloadSuggestions = () => {
+    if (!draftSuggestions) return;
+    const blob = new Blob([draftSuggestions], { type: 'text/plain;charset=utf-8' });
+    saveAs(blob, `Nexus_Suggestions_${new Date().getTime()}.txt`);
+  };
+
+  const handleCustomPromptDrafting = async (target: 'draft' | 'suggestions') => {
+    if (isCustomPromptProcessing) return;
+    setIsCustomPromptProcessing(true);
+    setCitationSearchError('');
+    
+    try {
+      const factsText = draftFacts.trim() || "(No facts provided yet)";
+      const modelTemplate = draftModel.trim() ? `Model Draft / Template Guide:\n${draftModel.trim()}` : "";
+      
+      let docsContentSection = "";
+      if (workbenchDocuments.length > 0) {
+        docsContentSection = "\n\nUploaded Supporting Case Documents:\n" + workbenchDocuments.map((doc, idx) => {
+          return `--- Document #${idx + 1}: ${doc.name} (Type: ${doc.type}) ---
+Extracted Content / Refined Text:
+${doc.content || "(No extracted text or processing error)"}
+`;
+        }).join("\n");
+      }
+      
+      let prompt = "";
+      if (target === 'draft') {
+        prompt = `You are an elite legal drafting expert specializing in Indian legal pleadings and court documents.
+The user wants a customized legal draft based on:
+
+Case Facts:
+${factsText}
+
+${modelTemplate}
+${docsContentSection}
+
+User's Specific Instructions & Prompt:
+"${customPromptText}"
+
+Please analyze the facts, synthesize any uploaded supporting case documents, and follow the user's specific instructions to generate an exceptionally high-quality, professional court-ready draft. 
+Return ONLY the direct text of the petition/plaint itself, with structured headings, formal legal tone, and appropriate statutory references. Keep the document comprehensive.`;
+      } else {
+        prompt = `You are a senior judicial scholar and elite legal advisor.
+The user wants a customized, professional set of improvement suggestions and legal strategies based on:
+
+Case Facts:
+${factsText}
+
+${modelTemplate}
+${docsContentSection}
+
+User's Specific Instructions & Prompt:
+"${customPromptText}"
+
+Please analyze the facts, the uploaded supporting case documents, current document structure, and the user's specific instructions. Give 3 to 6 highly detailed, professional improvement recommendations, key statutory avenues, or formatting changes. 
+Format your output cleanly using markdown with bold headings and bullet points.`;
+      }
+
+      // If we have an image among uploaded documents, leverage it as visual model input!
+      const firstImageDoc = workbenchDocuments.find(d => d.base64Url);
+      const payloadImage = firstImageDoc ? firstImageDoc.base64Url : undefined;
+
+      const response = await aiEngine.generateResponse(prompt, [], payloadImage, 'drafting');
+      
+      if (target === 'draft') {
+        setDraftPages([response.text]);
+        
+        setIsSearchingCitations(true);
+        try {
+          const citationPrompt = `You are an expert legal researcher specializing in Indian Supreme Court and High Court judgments.
+Based on the following facts of the case:
+"${factsText}"
+
+${docsContentSection}
+
+And following these specific user instructions:
+"${customPromptText}"
+
+Please find 3 highly relevant real or highly probable Supreme Court or High Court case citations that support our client's legal position.
+If absolutely no relevant precedents can be found, respond with exactly:
+NO_CASES_FOUND
+
+Otherwise, respond ONLY in the exact citation format:
+[CASE]
+Title: [Citation Title]
+Court: [Supreme Court or High Court]
+Paragraph: [Detailed rationale of principle of law and application]
+[END_CASE]`;
+          const citationsResponse = await aiEngine.generateResponse(citationPrompt, [], undefined, 'drafting');
+          const parsed = parseCitations(citationsResponse.text);
+          setDraftCitations(parsed);
+          setShowCitationsDropdown(true);
+        } catch (err) {
+          console.error("Citations fail under custom prompt:", err);
+        } finally {
+          setIsSearchingCitations(false);
+        }
+      } else {
+        setDraftSuggestions(response.text);
+      }
+      
+      if (workbenchStreamRef.current) {
+        workbenchStreamRef.current.getTracks().forEach(t => t.stop());
+        workbenchStreamRef.current = null;
+      }
+      setWorkbenchCameraActive(false);
+
+      setShowCustomPromptPage(false);
+
+      if (autoSpeakWorkbenchResult) {
+        speakResponse({ text: response.text, model: target === 'draft' ? "Custom Case Draft" : "Case Suggestions" });
+      }
+    } catch (err) {
+      console.error("Custom prompt drafting failed:", err);
+    } finally {
+      setIsCustomPromptProcessing(false);
+    }
+  };
+
+  const handleJumpToCitation = (id: string) => {
+    setShowCitationsDropdown(true);
+    setHighlightedCitationId(id);
+    
+    // Smooth scroll to the card
+    setTimeout(() => {
+      const el = document.getElementById(`citation-card-${id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+
+    // Auto clear flash after 2.5 seconds
+    setTimeout(() => {
+      setHighlightedCitationId(null);
+    }, 2500);
+  };
+
+  const renderDraftWithQuickLinks = (text: string) => {
+    if (!text) return null;
+    const activeCitations = draftCitations.filter(c => c.selected);
+    if (activeCitations.length === 0) {
+      return <span className="whitespace-pre-wrap">{text}</span>;
+    }
+
+    const sortedCitations = [...activeCitations].sort((a, b) => b.title.length - a.title.length);
+
+    interface TextSegment {
+      type: 'text' | 'citation';
+      content: string;
+      citationId?: string;
+      citationTitle?: string;
+    }
+
+    let segments: TextSegment[] = [{ type: 'text', content: text }];
+
+    sortedCitations.forEach(cit => {
+      const nextSegments: TextSegment[] = [];
+      segments.forEach(seg => {
+        if (seg.type !== 'text') {
+          nextSegments.push(seg);
+          return;
+        }
+
+        const title = cit.title;
+        const escapedTitle = title.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        const regex = new RegExp(`(${escapedTitle})`, 'gi');
+        
+        const parts = seg.content.split(regex);
+        parts.forEach((part, i) => {
+          if (i % 2 === 1) {
+            nextSegments.push({
+              type: 'citation',
+              content: part,
+              citationId: cit.id,
+              citationTitle: cit.title
+            });
+          } else if (part) {
+            nextSegments.push({
+              type: 'text',
+              content: part
+            });
+          }
+        });
+      });
+      segments = nextSegments;
+    });

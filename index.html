@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <style>
+      html, body { height: 100%; overflow: hidden; }
+      :root { --vh: 1vh; }
+    </style>
+    <script>
+      // Fix iOS Safari 100vh bug — address bar eats ~75px of 100vh
+      function setVh() {
+        var vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', vh + 'px');
+      }
+      setVh();
+      window.addEventListener('resize', setVh);
+      // Also update on orientation change (iOS fires resize late)
+      window.addEventListener('orientationchange', function() {
+        setTimeout(setVh, 200);
+      });
+      // visualViewport API for newer iOS (keyboard open/close)
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setVh);
+      }
+    </script>
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Nexus Justice" />
+    <meta name="application-name" content="Nexus Justice" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/icon-144x144.png" />
+    <title>Nexus Justice</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; height: -webkit-fill-available; overflow: hidden; }
+      body { background: #020617; }
+      #root { height: 100%; height: -webkit-fill-available; }
+      /* iOS safe areas */
+      @supports (padding: env(safe-area-inset-bottom)) {
+        body { padding-bottom: env(safe-area-inset-bottom); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.jsx"></script>
+  </body>
+</html>

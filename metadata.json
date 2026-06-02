@@ -1,0 +1,6 @@
+{
+  "name": "Advocate Portal",
+  "description": "A dynamic portal for Kerala advocates to manage clients, cases, legal brief generation with Gemini, and digital file vaults.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
